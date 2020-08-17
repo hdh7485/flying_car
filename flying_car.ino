@@ -1,5 +1,6 @@
 #include <Dynamixel2Arduino.h>
-#include "SBUS.h"
+#include <math.h>
+#include <SBUS.h>
 
 #define DEBUG_SERIAL  Serial
 #define DXL_SERIAL    Serial1
@@ -14,8 +15,32 @@ const uint8_t LEFT_DXL_ID = 1;
 const uint8_t RIGHT_DXL_ID = 2;
 const float   DXL_PROTOCOL_VERSION = 2.0;
 
+class AckermannGeometry{
+private:
+  const double  WHEEL_FRONT_WIDTH = 1.0; //m
+  const double  WHEEL_REAR_WIDTH = 1.0; //m
+  const double  WHEEL_VERTICAL_DISTANCE = 2.0; //m
+  const double  WHEEL_RADIUS = 0.127; //m
+
+public:
+  double left_steer_angle;
+  double right_steer_angle;
+  double left_rear_rpm;
+  double right_rear_rpm;
+
+  void calculate(double steering_angle, double speed){  //steering_angle: radian, speed: m/s
+    double R = tan(steering_angle) / WHEEL_VERTICAL_DISTANCE;
+    left_steer_angle = atan2(WHEEL_VERTICAL_DISTANCE, (R - WHEEL_FRONT_WIDTH/2));
+    right_steer_angle = atan2(WHEEL_VERTICAL_DISTANCE, (R + WHEEL_FRONT_WIDTH/2));
+    //self.left_rear_rpm = 
+    //self.right_rear_rpm = 
+  }
+
+};
+
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
 SBUS x8r(SBUS_SERIAL);
+AckermannGeometry ackermann_geometry;
 
 float channels[16];
 bool failSafe;
@@ -46,7 +71,8 @@ void setup() {
 
 void loop() {
   if (x8r.readCal(&channels[0], &failSafe, &lostFrame)) {
-    target_steering_degree = *(channel+0) * 30.0
+    target_steering_degree = *(channels+0) * 30.0 * M_PI/180;
+    ackermann_geometry.calculate(target_steering_degree, 1);
     dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
     dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
     delay(1000);
