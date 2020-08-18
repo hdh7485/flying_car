@@ -11,30 +11,30 @@
 
 const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 
-const uint8_t LEFT_DXL_ID = 1;
-const uint8_t RIGHT_DXL_ID = 2;
+const uint8_t LEFT_DXL_ID = 2;
+const uint8_t RIGHT_DXL_ID = 1;
 const float   DXL_PROTOCOL_VERSION = 2.0;
 
-class AckermannGeometry{
-private:
-  const double  WHEEL_FRONT_WIDTH = 1.0; //m
-  const double  WHEEL_REAR_WIDTH = 1.0; //m
-  const double  WHEEL_VERTICAL_DISTANCE = 2.0; //m
-  const double  WHEEL_RADIUS = 0.127; //m
+class AckermannGeometry {
+  private:
+    const double  WHEEL_FRONT_WIDTH = 1.0; //m
+    const double  WHEEL_REAR_WIDTH = 1.0; //m
+    const double  WHEEL_VERTICAL_DISTANCE = 2.0; //m
+    const double  WHEEL_RADIUS = 0.127; //m
 
-public:
-  double left_steer_angle;
-  double right_steer_angle;
-  double left_rear_rpm;
-  double right_rear_rpm;
+  public:
+    double left_steer_angle;
+    double right_steer_angle;
+    double left_rear_rpm;
+    double right_rear_rpm;
 
-  void calculate(double steering_angle, double speed){  //steering_angle: radian, speed: m/s
-    double R = tan(steering_angle) / WHEEL_VERTICAL_DISTANCE;
-    left_steer_angle = atan2(WHEEL_VERTICAL_DISTANCE, (R - WHEEL_FRONT_WIDTH/2));
-    right_steer_angle = atan2(WHEEL_VERTICAL_DISTANCE, (R + WHEEL_FRONT_WIDTH/2));
-    //self.left_rear_rpm = 
-    //self.right_rear_rpm = 
-  }
+    void calculate(double steering_angle, double speed) { //steering_angle: radian, speed: m/s
+      double R = tan(steering_angle) / WHEEL_VERTICAL_DISTANCE;
+      left_steer_angle = atan2(WHEEL_VERTICAL_DISTANCE, (R - WHEEL_FRONT_WIDTH / 2));
+      right_steer_angle = atan2(WHEEL_VERTICAL_DISTANCE, (R + WHEEL_FRONT_WIDTH / 2));
+      //self.left_rear_rpm =
+      //self.right_rear_rpm =
+    }
 
 };
 
@@ -71,15 +71,16 @@ void setup() {
 
 void loop() {
   if (x8r.readCal(&channels[0], &failSafe, &lostFrame)) {
-    target_steering_degree = *(channels+0) * 30.0 * M_PI/180;
-    ackermann_geometry.calculate(target_steering_degree, 1);
-    dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-    dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-    delay(1000);
+    target_steering_degree = *(channels + 0) * 30.0 * M_PI / 180;
+    ackermann_geometry.calculate(target_steering_degree, 1.0);
+//    DEBUG_SERIAL.println(ackermann_geometry.left_steer_angle);
+    DEBUG_SERIAL.println(target_steering_degree*30);
+    dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree*30, UNIT_DEGREE);
+    dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree*30, UNIT_DEGREE);
+
     // Print present position in degree value
-    DEBUG_SERIAL.print("Present Position(degree) : ");
-    DEBUG_SERIAL.println(dxl.getPresentPosition(LEFT_DXL_ID, UNIT_DEGREE));
-    DEBUG_SERIAL.println(dxl.getPresentPosition(RIGHT_DXL_ID, UNIT_DEGREE));
-    delay(1000);
+    //    DEBUG_SERIAL.print("Present Position(degree) : ");
+    //    DEBUG_SERIAL.println(dxl.getPresentPosition(LEFT_DXL_ID, UNIT_DEGREE));
+    //    DEBUG_SERIAL.println(dxl.getPresentPosition(RIGHT_DXL_ID, UNIT_DEGREE));
   }
 }
