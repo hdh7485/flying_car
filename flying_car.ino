@@ -102,28 +102,8 @@ void setup() {
 
 void loop() {
   if (x8r.readCal(&channels[0], &failSafe, &lostFrame)) {
-//    target_steering_degree = *(channels + 0) * 30.0 * M_PI / 180;
-    target_steering_degree = *(channels + 0) * -30.0;
-    ackermann_geometry.calculate(target_steering_degree, 1);
-    target_wheel_rpm = (*(channels + 1) * 150) - 4.3;
-  }
-  if (motor1_calibration_finish) {
-//    DEBUG_SERIAL.println("Executing test move");
-    odrive.SetVelocity(0, target_wheel_rpm);
-    odrive.SetVelocity(1, -target_wheel_rpm);
-    dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-    dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-    DEBUG_SERIAL.println(target_steering_degree);
-//    DEBUG_SERIAL.println("Executing test move");
-  }
-//  dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-//  dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-
-  if (DEBUG_SERIAL.available()) {
-    char c = DEBUG_SERIAL.read();
-
-    // Run calibration sequence
-    if (c == '0' || c == '1') {
+    // if (c == '0' || c == '1') {
+    if (*(channels + 7) > 0) {
       int requested_state;
 
       requested_state = ODriveArduino::AXIS_STATE_MOTOR_CALIBRATION;
@@ -146,7 +126,18 @@ void loop() {
       delay(100);
       motor1_calibration_finish = true;
     }
+    else {
+    target_steering_degree = *(channels + 0) * -30.0;
+    ackermann_geometry.calculate(target_steering_degree, 1);
+    target_wheel_rpm = (*(channels + 1) * 150) - 4.3;
+    }
   }
-
+  if (motor1_calibration_finish) {
+    odrive.SetVelocity(0, target_wheel_rpm);
+    odrive.SetVelocity(1, -target_wheel_rpm);
+    dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
+    dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
+    DEBUG_SERIAL.println(target_steering_degree);
+  }
   delay(10);
 }
