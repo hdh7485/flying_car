@@ -110,7 +110,8 @@ void loop() {
   if (motor1_calibration_finish) {
 //    DEBUG_SERIAL.println("Executing test move");
     odrive.SetVelocity(0, target_wheel_rpm);
-    dxl.setGoalPosition(LEFT_DXL_ID, target_steerinMg_degree, UNIT_DEGREE);
+    odrive.SetVelocity(1, target_wheel_rpm);
+    dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
     dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
     DEBUG_SERIAL.println(target_steering_degree);
 //    DEBUG_SERIAL.println("Executing test move");
@@ -123,20 +124,25 @@ void loop() {
 
     // Run calibration sequence
     if (c == '0' || c == '1') {
-      int motornum = c - '0';
       int requested_state;
 
       requested_state = ODriveArduino::AXIS_STATE_MOTOR_CALIBRATION;
-      DEBUG_SERIAL << "Axis" << c << ": Requesting state " << requested_state << '\n';
-      odrive.run_state(motornum, requested_state, true);
+      DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
+      DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
+      odrive.run_state(0, requested_state, false);
+      odrive.run_state(1, requested_state, true);
 
       requested_state = ODriveArduino::AXIS_STATE_ENCODER_OFFSET_CALIBRATION;
-      DEBUG_SERIAL << "Axis" << c << ": Requesting state " << requested_state << '\n';
-      odrive.run_state(motornum, requested_state, true);
+      DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
+      DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
+      odrive.run_state(0, requested_state, false);
+      odrive.run_state(1, requested_state, true);
 
       requested_state = ODriveArduino::AXIS_STATE_CLOSED_LOOP_CONTROL;
-      DEBUG_SERIAL << "Axis" << c << ": Requesting state " << requested_state << '\n';
-      odrive.run_state(motornum, requested_state, false); // don't wait
+      DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
+      DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
+      odrive.run_state(0, requested_state, false); // don't wait
+      odrive.run_state(1, requested_state, false); // don't wait
       delay(100);
       motor1_calibration_finish = true;
     }
