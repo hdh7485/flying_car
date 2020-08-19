@@ -110,7 +110,7 @@ void loop() {
   if (motor1_calibration_finish) {
 //    DEBUG_SERIAL.println("Executing test move");
     odrive.SetVelocity(0, target_wheel_rpm);
-    odrive.SetVelocity(1, target_wheel_rpm);
+    odrive.SetVelocity(1, -target_wheel_rpm);
     dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
     dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
     DEBUG_SERIAL.println(target_steering_degree);
