@@ -24,8 +24,8 @@ template<>        inline Print& operator <<(Print &obj, float arg) {
 
 const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
 
-const uint8_t LEFT_DXL_ID = 1;
-const uint8_t RIGHT_DXL_ID = 2;
+const uint8_t LEFT_DXL_ID = 2;
+const uint8_t RIGHT_DXL_ID = 1;
 const float   DXL_PROTOCOL_VERSION = 2.0;
 
 class AckermannGeometry {
