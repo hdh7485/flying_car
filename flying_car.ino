@@ -63,8 +63,6 @@ bool lostFrame;
 float target_steering_degree;
 double target_wheel_rpm;
 
-bool motor_calibration_finish;
-
 void setup() {
   ODRIVE_SERIAL.begin(ODRIVE_SERIAL_BAUDRATE);
 
@@ -102,7 +100,6 @@ void setup() {
 
 void loop() {
   if (x8r.readCal(&channels[0], &failSafe, &lostFrame)) {
-    // if (c == '0' || c == '1') {
     if (*(channels + 7) > 0) {
       int requested_state;
 
@@ -124,19 +121,16 @@ void loop() {
       odrive.run_state(0, requested_state, false); // don't wait
       odrive.run_state(1, requested_state, false); // don't wait
       delay(100);
-      motor_calibration_finish = true;
     }
     else {
       target_steering_degree = *(channels + 0) * -30.0;
       ackermann_geometry.calculate(target_steering_degree, 1);
       target_wheel_rpm = (*(channels + 1) * 150) - 4.3;
-      if (motor_calibration_finish) {
-        odrive.SetVelocity(0, target_wheel_rpm);
-        odrive.SetVelocity(1, -target_wheel_rpm);
-        dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-        dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-        DEBUG_SERIAL.println(target_steering_degree);
-      }
+      odrive.SetVelocity(0, target_wheel_rpm);
+      odrive.SetVelocity(1, -target_wheel_rpm);
+      dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
+      dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
+      DEBUG_SERIAL.println(target_steering_degree);
     }
   }
   delay(10);
