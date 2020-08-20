@@ -63,6 +63,8 @@ bool lostFrame;
 float target_steering_degree;
 double target_wheel_rpm;
 
+int requested_state;
+
 void setup() {
   ODRIVE_SERIAL.begin(ODRIVE_SERIAL_BAUDRATE);
 
@@ -79,6 +81,11 @@ void setup() {
     ODRIVE_SERIAL << "w axis" << axis << ".motor.config.current_lim " << 11.0f << '\n';
     // This ends up writing something like "w axis0.motor.config.current_lim 10.0\n"
   }
+  requested_state = ODriveArduino::AXIS_STATE_CLOSED_LOOP_CONTROL;
+  DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
+  DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
+  odrive.run_state(0, requested_state, false); // don't wait
+  odrive.run_state(1, requested_state, false); // don't wait
 
   dxl.begin(DXL_SERIAL_BAUDRATE);
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
@@ -101,8 +108,6 @@ void setup() {
 void loop() {
   if (x8r.readCal(&channels[0], &failSafe, &lostFrame)) {
     if (*(channels + 7) > 0) {
-      int requested_state;
-
       requested_state = ODriveArduino::AXIS_STATE_MOTOR_CALIBRATION;
       DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
       DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
