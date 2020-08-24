@@ -44,24 +44,32 @@ class AckermannGeometry {
     double left_rear_rpm;
     double right_rear_rpm;
 
-    void calculate(double steering_angle, double speed) { //steering_angle: radian, speed: m/s
+    void calculate(double steering_angle, double rpm) { //steering_angle: radian, speed: m/s
       if (steering_angle < 0.3 && steering_angle > -0.3) {
         left_steer_degree = 0.0;
         right_steer_degree = 0.0;
+        left_rear_rpm = rpm;
+        right_rear_rpm = rpm;
       }
       else {
         double R = WHEEL_VERTICAL_DISTANCE / tan(steering_angle * M_PI / 180.0);
+        if (steering_angle > 0) {
+          left_rear_rpm = rpm * (R - WHEEL_REAR_WIDTH / 2) / R;
+          right_rear_rpm = rpm * (R + WHEEL_REAR_WIDTH / 2) / R;
+        }
+        else {
+          left_rear_rpm = rpm * (R + WHEEL_REAR_WIDTH / 2) / R;
+          right_rear_rpm = rpm * (R - WHEEL_REAR_WIDTH / 2) / R;
+        }
         left_steer_degree = atan2(WHEEL_VERTICAL_DISTANCE, (R - WHEEL_FRONT_WIDTH / 2)) * 180.0 / M_PI ;
         right_steer_degree = atan2(WHEEL_VERTICAL_DISTANCE, (R + WHEEL_FRONT_WIDTH / 2)) * 180.0 / M_PI;
-        if (left_steer_degree > 90){
+        if (left_steer_degree > 90) {
           left_steer_degree -= 180;
         }
-        if (right_steer_degree > 90){
+        if (right_steer_degree > 90) {
           right_steer_degree -= 180;
         }
       }
-      //self.left_rear_rpm =
-      //self.right_rear_rpm =
     }
 
 };
@@ -144,11 +152,18 @@ void loop() {
     }
     else {
       target_steering_degree = *(channels + 0) * -30.0 + STEERING_BIAS;
+      target_wheel_rpm = (*(channels + 1) * 150) + THROTTLE_BIAS;
+      
       ackermann_geometry.calculate(target_steering_degree, 1);
+      
       DEBUG_SERIAL << "target Angle: " << target_steering_degree << '\n';
       DEBUG_SERIAL << "Left Angle  : " << ackermann_geometry.left_steer_degree << '\n';
-      DEBUG_SERIAL << "Right Angle : " << ackermann_geometry.right_steer_degree << '\n';
-      target_wheel_rpm = (*(channels + 1) * 150) + THROTTLE_BIAS;
+      DEBUG_SERIAL << "Right Angle : " << ackermann_geometry.right_steer_degree << "\n\n";
+      
+      DEBUG_SERIAL << "target RPM: " << target_wheel_rpm << '\n';
+      DEBUG_SERIAL << "Left RPM  : " << ackermann_geometry.left_rear_rpm << '\n';
+      DEBUG_SERIAL << "Right RPM : " << ackermann_geometry.right_rear_rpm << "\n\n";
+      
       odrive.SetVelocity(0, target_wheel_rpm);
       odrive.SetVelocity(1, -target_wheel_rpm);
       dxl.setGoalPosition(LEFT_DXL_ID, ackermann_geometry.left_steer_degree, UNIT_DEGREE);
