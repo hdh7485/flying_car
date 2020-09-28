@@ -12,6 +12,9 @@
 #define DXL_SERIAL_BAUDRATE 115200
 #define ODRIVE_SERIAL_BAUDRATE 115200
 
+#define STEERING_BIAS 1.5
+#define THROTTLE_BIAS -4.3
+
 // Printing with stream operator
 template<class T> inline Print& operator <<(Print &obj,     T arg) {
   obj.print(arg);
@@ -76,7 +79,7 @@ bool lostFrame;
 
 float target_steering_degree;
 double target_wheel_rpm;
-bool motor1_calibration_finish;
+
 int requested_state;
 
 void setup() {
@@ -117,29 +120,7 @@ void setup() {
 
 void loop() {
   if (x8r.readCal(&channels[0], &failSafe, &lostFrame)) {
-//    target_steering_degree = *(channels + 0) * 30.0 * M_PI / 180;
-    target_steering_degree = *(channels + 0) * -30.0;
-    ackermann_geometry.calculate(target_steering_degree, 1);
-    target_wheel_rpm = (*(channels + 1) * 150) - 4.3;
-  }
-  if (motor1_calibration_finish) {
-//    DEBUG_SERIAL.println("Executing test move");
-    odrive.SetVelocity(0, target_wheel_rpm);
-    odrive.SetVelocity(1, -target_wheel_rpm);
-    dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-    dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-    DEBUG_SERIAL.println(target_steering_degree);
-//    DEBUG_SERIAL.println("Executing test move");
-  }
-//  dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-//  dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-
-  if (DEBUG_SERIAL.available()) {
-    char c = DEBUG_SERIAL.read();
-
-    // Run calibration sequence
-    if (c == '0' || c == '1') {
-      int requested_state;
+    if (*(channels + 7) > 0) {
       requested_state = ODriveArduino::AXIS_STATE_MOTOR_CALIBRATION;
       DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
       DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
@@ -175,8 +156,8 @@ void loop() {
 
       odrive.SetVelocity(0, target_wheel_rpm);
       odrive.SetVelocity(1, -target_wheel_rpm);
-      dxl.setGoalPosition(LEFT_DXL_ID, target_steering_degree, UNIT_DEGREE);
-      dxl.setGoalPosition(RIGHT_DXL_ID, target_steering_degree, UNIT_DEGREE);
+      dxl.setGoalPosition(LEFT_DXL_ID, ackermann_geometry.left_steer_degree, UNIT_DEGREE);
+      dxl.setGoalPosition(RIGHT_DXL_ID, ackermann_geometry.right_steer_degree, UNIT_DEGREE);
     }
   }
   delay(10);
