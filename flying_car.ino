@@ -33,9 +33,9 @@ const float   DXL_PROTOCOL_VERSION = 2.0;
 
 class AckermannGeometry {
   private:
-    const double  WHEEL_FRONT_WIDTH = 1.0; //m
-    const double  WHEEL_REAR_WIDTH = 1.0; //m
-    const double  WHEEL_VERTICAL_DISTANCE = 2.0; //m
+    const double  WHEEL_FRONT_WIDTH = 0.48; //m
+    const double  WHEEL_REAR_WIDTH = 0.53; //m
+    const double  WHEEL_VERTICAL_DISTANCE = 1.44; //m
     const double  WHEEL_RADIUS = 0.127; //m
 
   public:
@@ -141,7 +141,7 @@ void loop() {
       delay(100);
     }
     else {
-      target_steering_degree = *(channels + 0) * -30.0 + STEERING_BIAS;
+      target_steering_degree = *(channels + 0) * -40.0 + STEERING_BIAS;
       target_wheel_rpm = (*(channels + 1) * 150) + THROTTLE_BIAS;
 
       ackermann_geometry.calculate(target_steering_degree, target_wheel_rpm);
