@@ -33,9 +33,9 @@ const float   DXL_PROTOCOL_VERSION = 2.0;
 
 class AckermannGeometry {
   private:
-    const double  WHEEL_FRONT_WIDTH = 0.485; //m
-    const double  WHEEL_REAR_WIDTH = 0.52; //m
-    const double  WHEEL_VERTICAL_DISTANCE = 1.43; //m
+    const double  WHEEL_FRONT_WIDTH = 1.0; //m
+    const double  WHEEL_REAR_WIDTH = 1.0; //m
+    const double  WHEEL_VERTICAL_DISTANCE = 2.0; //m
     const double  WHEEL_RADIUS = 0.127; //m
 
   public:
@@ -81,10 +81,10 @@ bool motor1_calibration_finish;
 int requested_state;
 
 void setup() {
-  DEBUG_SERIAL.begin(DEBUG_SERIAL_BAUDRATE);
-  DEBUG_SERIAL.println("Start");
   ODRIVE_SERIAL.begin(ODRIVE_SERIAL_BAUDRATE);
+
   // Use UART port of DYNAMIXEL Shield to debug.
+  DEBUG_SERIAL.begin(DEBUG_SERIAL_BAUDRATE);
   DEBUG_SERIAL.println("ODriveArduino");
   DEBUG_SERIAL.println("Setting parameters...");
 
@@ -123,7 +123,7 @@ void setup() {
 void loop() {
   if (x8r.readCal(&channels[0], &failSafe, &lostFrame)) {
 //    target_steering_degree = *(channels + 0) * 30.0 * M_PI / 180;
-    target_steering_degree = *(channels + 0) * -40.0;
+    target_steering_degree = *(channels + 0) * -30.0;
     ackermann_geometry.calculate(target_steering_degree, 1);
     target_wheel_rpm = (*(channels + 1) * 150) - 4.3;
   }
