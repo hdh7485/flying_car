@@ -12,6 +12,9 @@
 #define DXL_SERIAL_BAUDRATE 115200
 #define ODRIVE_SERIAL_BAUDRATE 115200
 
+#define STEERING_BIAS 1.5
+#define THROTTLE_BIAS -4.3
+
 // Printing with stream operator
 template<class T> inline Print& operator <<(Print &obj,     T arg) {
   obj.print(arg);
@@ -36,15 +39,27 @@ class AckermannGeometry {
     const double  WHEEL_RADIUS = 0.127; //m
 
   public:
-    double left_steer_angle;
-    double right_steer_angle;
+    double left_steer_degree;
+    double right_steer_degree;
     double left_rear_rpm;
     double right_rear_rpm;
 
     void calculate(double steering_angle, double speed) { //steering_angle: radian, speed: m/s
-      double R = tan(steering_angle) / WHEEL_VERTICAL_DISTANCE;
-      left_steer_angle = atan2(WHEEL_VERTICAL_DISTANCE, (R - WHEEL_FRONT_WIDTH / 2));
-      right_steer_angle = atan2(WHEEL_VERTICAL_DISTANCE, (R + WHEEL_FRONT_WIDTH / 2));
+      if (steering_angle < 0.3 && steering_angle > -0.3) {
+        left_steer_degree = 0.0;
+        right_steer_degree = 0.0;
+      }
+      else {
+        double R = WHEEL_VERTICAL_DISTANCE / tan(steering_angle * M_PI / 180.0);
+        left_steer_degree = atan2(WHEEL_VERTICAL_DISTANCE, (R - WHEEL_FRONT_WIDTH / 2)) * 180.0 / M_PI ;
+        right_steer_degree = atan2(WHEEL_VERTICAL_DISTANCE, (R + WHEEL_FRONT_WIDTH / 2)) * 180.0 / M_PI;
+        if (left_steer_degree > 90){
+          left_steer_degree -= 180;
+        }
+        if (right_steer_degree > 90){
+          right_steer_degree -= 180;
+        }
+      }
       //self.left_rear_rpm =
       //self.right_rear_rpm =
     }
@@ -62,8 +77,8 @@ bool lostFrame;
 
 float target_steering_degree;
 double target_wheel_rpm;
-
 bool motor1_calibration_finish;
+int requested_state;
 
 void setup() {
   DEBUG_SERIAL.begin(DEBUG_SERIAL_BAUDRATE);
@@ -77,10 +92,15 @@ void setup() {
   // You can of course set them different if you want.
   // See the documentation or play around in odrivetool to see the available parameters
   for (int axis = 0; axis < 2; ++axis) {
-    ODRIVE_SERIAL << "w axis" << axis << ".controller.config.vel_limit " << 22000.0f << '\n';
-    ODRIVE_SERIAL << "w axis" << axis << ".motor.config.current_lim " << 11.0f << '\n';
+    ODRIVE_SERIAL << "w axis" << axis << ".controller.config.vel_limit " << 1000.0f << '\n';
+    ODRIVE_SERIAL << "w axis" << axis << ".motor.config.current_lim " << 50.0f << '\n';
     // This ends up writing something like "w axis0.motor.config.current_lim 10.0\n"
   }
+  requested_state = ODriveArduino::AXIS_STATE_CLOSED_LOOP_CONTROL;
+  DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
+  DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
+  odrive.run_state(0, requested_state, false); // don't wait
+  odrive.run_state(1, requested_state, false); // don't wait
 
   dxl.begin(DXL_SERIAL_BAUDRATE);
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
@@ -125,7 +145,6 @@ void loop() {
     // Run calibration sequence
     if (c == '0' || c == '1') {
       int requested_state;
-
       requested_state = ODriveArduino::AXIS_STATE_MOTOR_CALIBRATION;
       DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
       DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
@@ -144,9 +163,19 @@ void loop() {
       odrive.run_state(0, requested_state, false); // don't wait
       odrive.run_state(1, requested_state, false); // don't wait
       delay(100);
-      motor1_calibration_finish = true;
+    }
+    else {
+      target_steering_degree = *(channels + 0) * -30.0 + STEERING_BIAS;
+      ackermann_geometry.calculate(target_steering_degree, 1);
+      DEBUG_SERIAL << "target Angle: " << target_steering_degree << '\n';
+      DEBUG_SERIAL << "Left Angle  : " << ackermann_geometry.left_steer_degree << '\n';
+      DEBUG_SERIAL << "Right Angle : " << ackermann_geometry.right_steer_degree << '\n';
+      target_wheel_rpm = (*(channels + 1) * 150) + THROTTLE_BIAS;
+      odrive.SetVelocity(0, target_wheel_rpm);
+      odrive.SetVelocity(1, -target_wheel_rpm);
+      dxl.setGoalPosition(LEFT_DXL_ID, ackermann_geometry.left_steer_degree, UNIT_DEGREE);
+      dxl.setGoalPosition(RIGHT_DXL_ID, ackermann_geometry.right_steer_degree, UNIT_DEGREE);
     }
   }
-
   delay(10);
 }
