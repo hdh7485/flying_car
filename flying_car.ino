@@ -52,6 +52,12 @@ class AckermannGeometry {
         left_rear_rpm = rpm;
         right_rear_rpm = rpm;
       }
+      else if (rpm < 0.3 && rpm > -0.3) {
+        left_steer_degree = 0.0;
+        right_steer_degree = 0.0;
+        left_rear_rpm = 0;
+        right_rear_rpm = 0;
+      }
       else {
         left_rear_rpm = rpm * (R + WHEEL_REAR_WIDTH / 2) / R;
         right_rear_rpm = rpm * (R - WHEEL_REAR_WIDTH / 2) / R;
@@ -83,17 +89,17 @@ double target_wheel_rpm;
 int requested_state;
 
 void setup() {
+  //  DEBUG_SERIAL.begin(DEBUG_SERIAL_BAUDRATE);
+  //  DEBUG_SERIAL.println("Setting parameters...");
+
   ODRIVE_SERIAL.begin(ODRIVE_SERIAL_BAUDRATE);
-
-  DEBUG_SERIAL.begin(DEBUG_SERIAL_BAUDRATE);
-  DEBUG_SERIAL.println("ODriveArduino");
-  DEBUG_SERIAL.println("Setting parameters...");
-
   for (int axis = 0; axis < 2; ++axis) {
     ODRIVE_SERIAL << "w axis" << axis << ".controller.config.vel_limit " << 1000.0f << '\n';
     ODRIVE_SERIAL << "w axis" << axis << ".motor.config.current_lim " << 50.0f << '\n';
     // This ends up writing something like "w axis0.motor.config.current_lim 10.0\n"
   }
+  DEBUG_SERIAL.println("ODriveArduino");
+
   requested_state = ODriveArduino::AXIS_STATE_CLOSED_LOOP_CONTROL;
   DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
   DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
@@ -101,9 +107,7 @@ void setup() {
   odrive.run_state(1, requested_state, false); // don't wait
 
   dxl.begin(DXL_SERIAL_BAUDRATE);
-  // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
-  // Get DYNAMIXEL information
   dxl.ping(LEFT_DXL_ID);
   dxl.ping(RIGHT_DXL_ID);
 
@@ -121,17 +125,17 @@ void setup() {
 void loop() {
   if (x8r.readCal(&channels[0], &failSafe, &lostFrame)) {
     if (*(channels + 7) > 0) {
-      requested_state = ODriveArduino::AXIS_STATE_MOTOR_CALIBRATION;
-      DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
-      DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
-      odrive.run_state(0, requested_state, false);
-      odrive.run_state(1, requested_state, true);
-
-      requested_state = ODriveArduino::AXIS_STATE_ENCODER_OFFSET_CALIBRATION;
-      DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
-      DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
-      odrive.run_state(0, requested_state, false);
-      odrive.run_state(1, requested_state, true);
+      //      requested_state = ODriveArduino::AXIS_STATE_MOTOR_CALIBRATION;
+      //      DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
+      //      DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
+      //      odrive.run_state(0, requested_state, false);
+      //      odrive.run_state(1, requested_state, true);
+      //
+      //      requested_state = ODriveArduino::AXIS_STATE_ENCODER_OFFSET_CALIBRATION;
+      //      DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
+      //      DEBUG_SERIAL << "Axis" << '1' << ": Requesting state " << requested_state << '\n';
+      //      odrive.run_state(0, requested_state, false);
+      //      odrive.run_state(1, requested_state, true);
 
       requested_state = ODriveArduino::AXIS_STATE_CLOSED_LOOP_CONTROL;
       DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
@@ -142,7 +146,10 @@ void loop() {
     }
     else {
       target_steering_degree = *(channels + 0) * -40.0 + STEERING_BIAS;
+      if (target_steering_degree < 2.0 && target_steering_degree > -2.0) target_steering_degree = 0.0;
+
       target_wheel_rpm = (*(channels + 1) * 150) + THROTTLE_BIAS;
+      if (target_wheel_rpm < 2.0 && target_wheel_rpm > -2.0) target_wheel_rpm = 0.0;
 
       ackermann_geometry.calculate(target_steering_degree, target_wheel_rpm);
 
