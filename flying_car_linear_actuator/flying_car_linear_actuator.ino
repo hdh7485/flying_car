@@ -34,31 +34,28 @@ class RotorArm {
       pinMode(_pin_unfold_sw, INPUT_PULLUP);
     }
     void fold(int pwm = 1024) {
-      if (isFoldSWPushed()) {  // FOLDING
-        digitalWrite(_pin_en1, LOW);
-        digitalWrite(_pin_en2, LOW);
-        analogWrite(_pin_pwm, 0);
+      if (isFoldSWPushed()) {  // STOP
+        stopMotor();
       }
-      else {                       // STOP
+      else {                       // FOLDING
         digitalWrite(_pin_en1, HIGH);
         digitalWrite(_pin_en2, LOW);
         analogWrite(_pin_pwm, pwm);
       }
     }
-    void unfold(int pwm = 1024) {
-      if (isUnfoldSWPushed()) {  // UNFOLDING
-        digitalWrite(_pin_en1, LOW);
-        digitalWrite(_pin_en2, LOW);
-        analogWrite(_pin_pwm, 0);
-      }
-      else {                       // STOP
 
+    void unfold(int pwm = 1024) {
+      if (isUnfoldSWPushed()) {  // STOP
+        stopMotor();
+      }
+      else {                       // UNFOLDING
         digitalWrite(_pin_en1, LOW);
         digitalWrite(_pin_en2, HIGH);
         analogWrite(_pin_pwm, pwm);
       }
     }
-    void pause(int type = 0) {
+
+    void stopMotor(int type = 0) {
       if (type) {
         digitalWrite(_pin_en1, LOW);
         digitalWrite(_pin_en2, HIGH);
@@ -79,7 +76,7 @@ class RotorArm {
 };
 
 RotorArm arm_FR(9, 10, 11, 14, 15);
-RotorArm arm_RR(6, 7, 8, 12, 13);
+RotorArm arm_RR(6, 7, 8, 16, 17);
 
 void setup()
 {
@@ -99,8 +96,8 @@ void loop()
 {
   if (futaba.read(channels, &failSafe, &lostFrame)) {
     Serial.println(channels[11]);
-    Serial.println(digitalRead(FOLD_SW));
-    Serial.println(digitalRead(UNFOLD_SW));
+    Serial.println(arm_FR.isUnfoldSWPushed());
+    Serial.println(arm_RR.isUnfoldSWPushed());
     if (channels[11] > 1500) {     // Folding Tx
       arm_FR.fold();
       arm_RR.fold();
@@ -134,8 +131,8 @@ void loop()
       //      }
     }
     else {
-      arm_FR.pause();
-      arm_RR.pause();
+      arm_FR.stopMotor();
+      arm_RR.stopMotor();
       //      digitalWrite(EN1, HIGH);
       //      digitalWrite(EN2, HIGH);
       //      analogWrite(PWM1, 0);
