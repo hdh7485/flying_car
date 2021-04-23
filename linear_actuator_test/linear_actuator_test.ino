@@ -25,7 +25,7 @@ void loop()
   delay(2000);
   digitalWrite(EN1, HIGH);
   digitalWrite(EN2, HIGH);
-  delay(100);
+//  delay(100);
   //  digitalWrite(EN1, HIGH);
   //  digitalWrite(EN2, HIGH);
   //  delay(100);
@@ -37,7 +37,7 @@ void loop()
   delay(2000);
   digitalWrite(EN1, HIGH);
   digitalWrite(EN2, HIGH);
-  delay(100);
+//  delay(100);
   //  digitalWrite(EN1, HIGH);
   //  digitalWrite(EN2, HIGH);
   //  delay(100);
