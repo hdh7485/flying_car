@@ -3,11 +3,11 @@
 #include <SBUS.h>
 #include <ODriveArduino.h>
 #include <ros.h>
-#include <ackermann_msgs/AckermannDrive.h>
-#include <ackermann_msgs/AckermannDriveStamped.h>
-#include <geometry_msgs/Twist.h>
+#include "ros_lib/ackermann_msgs/AckermannDriveStamped.h"
+#include "ros_lib/geometry_msgs/Twist.h"
+#include "AckermannGeometry.h"
 
-ros::NodeHandle  nh;
+ros::NodeHandle nh;
 
 double ack_steer =  0.0;
 double ack_throt =  0.0;
@@ -52,48 +52,7 @@ const uint8_t LEFT_DXL_ID = 2;
 const uint8_t RIGHT_DXL_ID = 1;
 const float   DXL_PROTOCOL_VERSION = 2.0;
 
-class AckermannGeometry {
-  private:
-    const double  WHEEL_FRONT_WIDTH = 0.48; //m
-    const double  WHEEL_REAR_WIDTH = 0.53; //m
-    const double  WHEEL_VERTICAL_DISTANCE = 1.44; //m
-    const double  WHEEL_RADIUS = 0.127; //m
 
-  public:
-    double left_steer_degree;
-    double right_steer_degree;
-    double left_rear_rpm;
-    double right_rear_rpm;
-
-    void calculate(double steering_angle, double rpm) { //steering_angle: radian, speed: m/s
-      double R = WHEEL_VERTICAL_DISTANCE / tan(steering_angle * M_PI / 180.0);
-      if (steering_angle < 0.3 && steering_angle > -0.3) {
-        left_steer_degree = 0.0;
-        right_steer_degree = 0.0;
-        left_rear_rpm = rpm;
-        right_rear_rpm = rpm;
-      }
-      //      else if (rpm < 0.3 && rpm > -0.3) {
-      //        left_steer_degree = 0.0;
-      //        right_steer_degree = 0.0;
-      //        left_rear_rpm = 0;
-      //        right_rear_rpm = 0;
-      //      }
-      else {
-        left_rear_rpm = rpm * (R + WHEEL_REAR_WIDTH / 2) / R;
-        right_rear_rpm = rpm * (R - WHEEL_REAR_WIDTH / 2) / R;
-
-        left_steer_degree = atan2(WHEEL_VERTICAL_DISTANCE, (R - WHEEL_FRONT_WIDTH / 2)) * 180.0 / M_PI ;
-        right_steer_degree = atan2(WHEEL_VERTICAL_DISTANCE, (R + WHEEL_FRONT_WIDTH / 2)) * 180.0 / M_PI;
-        if (left_steer_degree > 90) {
-          left_steer_degree -= 180;
-        }
-        if (right_steer_degree > 90) {
-          right_steer_degree -= 180;
-        }
-      }
-    }
-};
 
 ODriveArduino odrive(ODRIVE_SERIAL);
 Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
