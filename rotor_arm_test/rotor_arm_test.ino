@@ -6,7 +6,7 @@
 #define PWM1 11
 
 #include "SBUS.h"
-#include "RotorArm.h"
+#include "src/RotorArm.h"
 
 SBUS futaba(Serial1);
 uint16_t channels[16];
