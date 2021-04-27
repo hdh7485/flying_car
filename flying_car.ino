@@ -4,8 +4,8 @@
 #include <ros.h>
 #include "ros_lib/ackermann_msgs/AckermannDriveStamped.h"
 #include "ros_lib/geometry_msgs/Twist.h"
-#include "AckermannGeometry.h"
-#include "Steering.h"
+#include "src/AckermannGeometry.h"
+#include "src/Steering.h"
 
 ros::NodeHandle nh;
 
