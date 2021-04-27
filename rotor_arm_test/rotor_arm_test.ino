@@ -23,16 +23,6 @@ RotorArm arm_RL(15, 16, 29, 14, 17);
 
 void setup()
 {
-  //pinMode(ENA,OUTPUT);
-  //pinMode(ENB,OUTPUT);
-//  pinMode(LED, OUTPUT);
-//  pinMode(EN1, OUTPUT);
-//  pinMode(EN2, OUTPUT);
-//  pinMode(PWM1, OUTPUT);
-//  pinMode(FOLD_SW, INPUT_PULLUP);
-//  pinMode(UNFOLD_SW, INPUT_PULLUP);
-  //pinMode(EN3,OUTPUT);
-  //pinMode(EN4,OUTPUT);
   futaba.begin();
 }
 void loop()
@@ -46,46 +36,18 @@ void loop()
       arm_RR.fold();
       arm_FL.fold();
       arm_RL.fold();
-      //      if (digitalRead(FOLD_SW)) {  // FOLDING
-      //        digitalWrite(LED, HIGH);   // set the LED on
-      //        digitalWrite(EN1, HIGH);
-      //        digitalWrite(EN2, LOW);
-      //        analogWrite(PWM1, 1024);
-      //      }
-      //      else {                       // STOP
-      //        digitalWrite(LED, LOW);    // set the LED on
-      //        digitalWrite(EN1, LOW);
-      //        digitalWrite(EN2, LOW);
-      //        analogWrite(PWM1, 0);
-      //      }
     }
     else if (channels[11] < 1000) { //Unfolding Tx
       arm_FR.unfold();
       arm_RR.unfold();
       arm_FL.unfold();
       arm_RL.unfold();
-      //      if (digitalRead(UNFOLD_SW)) {  // UNFOLDING
-      //        digitalWrite(LED, HIGH);   // set the LED on
-      //        digitalWrite(EN1, LOW);
-      //        digitalWrite(EN2, HIGH);
-      //        analogWrite(PWM1, 1024);
-      //      }
-      //      else {                       // STOP
-      //        digitalWrite(LED, LOW);    // set the LED on
-      //        digitalWrite(EN1, LOW);
-      //        digitalWrite(EN2, LOW);
-      //        analogWrite(PWM1, 0);
-      //      }
     }
     else {
       arm_FR.stopMotor();
       arm_RR.stopMotor();
       arm_FL.stopMotor();
       arm_RL.stopMotor();
-      //      digitalWrite(EN1, HIGH);
-      //      digitalWrite(EN2, HIGH);
-      //      analogWrite(PWM1, 0);
-      //      delay(100);
     }
   }
 }
