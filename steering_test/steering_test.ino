@@ -60,15 +60,16 @@ void setup() {
 
 void loop() {
   if (x8r.readCal(&channels[0], &failSafe, &lostFrame)) {
-    target_steering_degree = -*(channels + 0) * -40.0 + STEERING_BIAS;
-    Serial.println(target_steering_degree);
+    target_steering_degree = *(channels + 0) * 40.0 + STEERING_BIAS;
     if (target_steering_degree < 2.0 && target_steering_degree > -2.0) target_steering_degree = 0.0;
+    Serial.println(target_steering_degree);
 
     target_wheel_rpm = (*(channels + 1) * 150) + THROTTLE_BIAS;
     if (target_wheel_rpm < 2.0 && target_wheel_rpm > -2.0) target_wheel_rpm = 0.0;
 
     ackermann_geometry.calculate(target_steering_degree, target_wheel_rpm);
     steering.rotateAckermannAngle(ackermann_geometry);
+    
     delay(5);
   }
 }

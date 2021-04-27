@@ -12,6 +12,7 @@
 #define STEERING_BIAS 1.5
 #define THROTTLE_BIAS -6.5
 
+Steering steering(Serial2, 115200, 23, 2.0, 2, 1);
 Throttle throttle(Serial3, 115200, 0, 1);
 SBUS x8r(SBUS_SERIAL);
 AckermannGeometry ackermann_geometry;
@@ -31,15 +32,18 @@ void setup() {
 
 void loop() {
   if (x8r.readCal(&channels[0], &failSafe, &lostFrame)) {
-    target_steering_degree = *(channels + 0) * -40.0 + STEERING_BIAS;
+    target_steering_degree = *(channels + 0) * 40.0 + STEERING_BIAS;
     if (target_steering_degree < 2.0 && target_steering_degree > -2.0) target_steering_degree = 0.0;
-    target_wheel_rpm = (*(channels + 1) * -150) - THROTTLE_BIAS;
-    Serial.println(target_wheel_rpm);
-    if (target_wheel_rpm < 2.0 && target_wheel_rpm > -2.0) target_wheel_rpm = 0.0;
-    ackermann_geometry.calculate(target_steering_degree, target_wheel_rpm);
+    Serial.println(target_steering_degree);
     
+    target_wheel_rpm = (*(channels + 1) * -150) - THROTTLE_BIAS;
+    if (target_wheel_rpm < 2.0 && target_wheel_rpm > -2.0) target_wheel_rpm = 0.0;
+    Serial.println(target_wheel_rpm);
+    
+    ackermann_geometry.calculate(target_steering_degree, target_wheel_rpm);
     throttle.rotateAckermannVelocity(ackermann_geometry);
-
+    steering.rotateAckermannAngle(ackermann_geometry);
+    
     delay(5);
   }
 }
