@@ -6,6 +6,7 @@
 #include "ros_lib/geometry_msgs/Twist.h"
 #include "src/AckermannGeometry.h"
 #include "src/Steering.h"
+#include "src/Throttle.h"
 
 ros::NodeHandle nh;
 
@@ -29,16 +30,6 @@ ros::Subscriber<ackermann_msgs::AckermannDriveStamped> sub("/Ackermann/command/j
 
 #define STEERING_BIAS 1.5
 #define THROTTLE_BIAS -4.3
-
-// Printing with stream operator
-template<class T> inline Print& operator <<(Print &obj,     T arg) {
-  obj.print(arg);
-  return obj;
-}
-template<>        inline Print& operator <<(Print &obj, float arg) {
-  obj.print(arg, 4);
-  return obj;
-}
 
 ODriveArduino odrive(ODRIVE_SERIAL);
 Steering steering(Serial1, 115200, 2, 2.0, 2, 1);

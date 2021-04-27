@@ -6,13 +6,13 @@ Throttle::Throttle(HardwareSerial& odrive_port, unsigned int odrive_serial_baudr
     _odrive_port << "w axis" << axis << ".controller.config.vel_limit " << 1000.0f << '\n';
     _odrive_port << "w axis" << axis << ".motor.config.current_lim " << 50.0f << '\n';
   }
-  requested_state = ODriveArduino::AXIS_STATE_CLOSED_LOOP_CONTROL;
-  odrive.run_state(0, requested_state, false); // don't wait
-  odrive.run_state(1, requested_state, false); // don't wait
+  int requested_state = ODriveArduino::AXIS_STATE_CLOSED_LOOP_CONTROL;
+  _odrive.run_state(0, requested_state, false); // don't wait
+  _odrive.run_state(1, requested_state, false); // don't wait
 } 
 
 void Throttle::rotateAckermannVelocity(AckermannGeometry ackermann){
-  odrive.SetVelocity(0, ackermann.left_rear_rpm);
-  odrive.SetVelocity(1, -ackermann.right_rear_rpm);
+  _odrive.SetVelocity(0, ackermann.left_rear_rpm);
+  _odrive.SetVelocity(1, -ackermann.right_rear_rpm);
 }
 
