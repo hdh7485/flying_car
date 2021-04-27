@@ -25,7 +25,6 @@ ros::Subscriber<ackermann_msgs::AckermannDriveStamped> sub("/Ackermann/command/j
 #define ODRIVE_SERIAL Serial3 
 
 //#define DEBUG_SERIAL_BAUDRATE 115200
-#define DXL_SERIAL_BAUDRATE 115200
 #define ODRIVE_SERIAL_BAUDRATE 115200
 
 #define STEERING_BIAS 1.5
@@ -40,14 +39,6 @@ template<>        inline Print& operator <<(Print &obj, float arg) {
   obj.print(arg, 4);
   return obj;
 }
-
-const uint8_t DXL_DIR_PIN = 2; // DYNAMIXEL Shield DIR PIN
-
-const uint8_t LEFT_DXL_ID = 2;
-const uint8_t RIGHT_DXL_ID = 1;
-const float   DXL_PROTOCOL_VERSION = 2.0;
-
-
 
 ODriveArduino odrive(ODRIVE_SERIAL);
 Steering steering(Serial1, 115200, 2, 2.0, 2, 1);
