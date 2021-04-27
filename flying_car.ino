@@ -1,4 +1,3 @@
-#include <Dynamixel2Arduino.h>
 #include <math.h>
 #include <SBUS.h>
 #include <ODriveArduino.h>
@@ -6,6 +5,7 @@
 #include "ros_lib/ackermann_msgs/AckermannDriveStamped.h"
 #include "ros_lib/geometry_msgs/Twist.h"
 #include "AckermannGeometry.h"
+#include "Steering.h"
 
 ros::NodeHandle nh;
 
@@ -16,16 +16,11 @@ void ackCb(const ackermann_msgs::AckermannDriveStamped& ack_msg) {
   ack_steer = ack_msg.drive.steering_angle;
   ack_throt = ack_msg.drive.speed / 3.6;
 }
-/*
-void ackCb(const geometry_msgs::Twist& ack_msg) {
-  ack_steer = ack_msg.linear.x;
-  ack_throt = ack_msg.linear.y;
-}*/
+
 ros::Subscriber<ackermann_msgs::AckermannDriveStamped> sub("/Ackermann/command/joy", &ackCb );
 //ros::Subscriber<geometry_msgs::Twist> sub("ackermann_msgs", &ackCb );
 
 //#define DEBUG_SERIAL  Serial
-#define DXL_SERIAL    Serial1
 #define SBUS_SERIAL   Serial2
 #define ODRIVE_SERIAL Serial3 
 
@@ -55,7 +50,7 @@ const float   DXL_PROTOCOL_VERSION = 2.0;
 
 
 ODriveArduino odrive(ODRIVE_SERIAL);
-Dynamixel2Arduino dxl(DXL_SERIAL, DXL_DIR_PIN);
+Steering steering(Serial1, 115200, 2, 2.0, 2, 1);
 SBUS x8r(SBUS_SERIAL);
 AckermannGeometry ackermann_geometry;
 
@@ -89,19 +84,6 @@ void setup() {
   odrive.run_state(0, requested_state, false); // don't wait
   odrive.run_state(1, requested_state, false); // don't wait
 
-  dxl.begin(DXL_SERIAL_BAUDRATE);
-  dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
-  dxl.ping(LEFT_DXL_ID);
-  dxl.ping(RIGHT_DXL_ID);
-
-  // Turn off torque when configuring items in EEPROM area
-  dxl.torqueOff(LEFT_DXL_ID);
-  dxl.torqueOff(RIGHT_DXL_ID);
-  dxl.setOperatingMode(LEFT_DXL_ID, OP_POSITION);
-  dxl.setOperatingMode(RIGHT_DXL_ID, OP_POSITION);
-  dxl.torqueOn(LEFT_DXL_ID);
-  dxl.torqueOn(RIGHT_DXL_ID);
-
   x8r.begin();
 }
 
@@ -116,8 +98,7 @@ void loop() {
       ackermann_geometry.calculate(target_steering_degree, target_wheel_rpm);
       odrive.SetVelocity(0, target_wheel_rpm);
       odrive.SetVelocity(1, -target_wheel_rpm);
-      dxl.setGoalPosition(LEFT_DXL_ID, ackermann_geometry.left_steer_degree, UNIT_DEGREE);
-      dxl.setGoalPosition(RIGHT_DXL_ID, ackermann_geometry.right_steer_degree, UNIT_DEGREE);
+      steering.rotateAckermannAngle(ackermann_geometry);
 
       //      requested_state = ODriveArduino::AXIS_STATE_MOTOR_CALIBRATION;
       //      DEBUG_SERIAL << "Axis" << '0' << ": Requesting state " << requested_state << '\n';
@@ -157,8 +138,7 @@ void loop() {
 
       odrive.SetVelocity(0, target_wheel_rpm);
       odrive.SetVelocity(1, -target_wheel_rpm);
-      dxl.setGoalPosition(LEFT_DXL_ID, ackermann_geometry.left_steer_degree, UNIT_DEGREE);
-      dxl.setGoalPosition(RIGHT_DXL_ID, ackermann_geometry.right_steer_degree, UNIT_DEGREE);
+      steering.rotateAckermannAngle(ackermann_geometry);
     }
   }
   delay(10);
